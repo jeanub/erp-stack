@@ -1,15 +1,35 @@
 # backend/config/settings.py
 import os
 from pathlib import Path
+from django.core.exceptions import ImproperlyConfigured
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "insecure")
-DEBUG = os.getenv("DJANGO_DEBUG", "0") == "1"
-ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "*").split(",")
+
+
+def _get_bool_env(name: str, default=False):
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "t", "yes", "y"}
+
+
+def _get_allowed_hosts():
+    raw_hosts = os.getenv("DJANGO_ALLOWED_HOSTS", "*")
+    hosts = [host.strip() for host in raw_hosts.split(",")]
+    return [host for host in hosts if host]
+
+DEBUG = _get_bool_env("DJANGO_DEBUG", default=False)
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
+if not SECRET_KEY:
+    if DEBUG:
+        SECRET_KEY = "insecure"
+    else:
+        raise ImproperlyConfigured("DJANGO_SECRET_KEY must be set when DEBUG is False.")
+
+ALLOWED_HOSTS = _get_allowed_hosts()
 
 # Application definition
-
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -20,10 +40,16 @@ INSTALLED_APPS = [
     "rest_framework",
     "django_filters",
     
-    #Mis apps
+    #Modulos del proyecto
     "apps.core",
-    
+    "apps.crm",
+    "apps.dashboard",
+    "apps.inventory",
+    "apps.sales",
+    "apps.users"
 ]
+
+AUTH_USER_MODEL = "users.User"
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -57,6 +83,13 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
+
+_required_db_env_vars = ["DB_NAME", "DB_USER", "DB_PASSWORD"]
+_missing_db_env = [var for var in _required_db_env_vars if not os.getenv(var)]
+if _missing_db_env:
+    raise ImproperlyConfigured(
+        "Missing database environment variables: {}".format(", ".join(_missing_db_env))
+    )
 
 DATABASES = {
     "default": {
