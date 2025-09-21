@@ -1,0 +1,29 @@
+[
+  {
+    "model": "users.role",
+    "pk": 1,
+    "fields": {
+      "code": "admin",
+      "name": "Administrador",
+      "description": "Acceso completo al sistema."
+    }
+  },
+  {
+    "model": "users.role",
+    "pk": 2,
+    "fields": {
+      "code": "supervisor",
+      "name": "Supervisor",
+      "description": "Puede gestionar operaciones y reportes."
+    }
+  },
+  {
+    "model": "users.role",
+    "pk": 3,
+    "fields": {
+      "code": "employee",
+      "name": "Empleado",
+      "description": "Acceso operativo basico."
+    }
+  }
+]
